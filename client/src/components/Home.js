@@ -21,6 +21,7 @@ const Home = ({ user, logout }) => {
 
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
+  const [newMessageFlag, setNewMessageFlag] = useState(false);
 
   const classes = useStyles();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -191,7 +192,11 @@ const Home = ({ user, logout }) => {
     if (!user.isFetching) {
       fetchConversations();
     }
-  }, [user]);
+    // Re-fetch conversations whenever a new message is posted.
+    if (newMessageFlag) {
+      setNewMessageFlag(false);
+    }
+  }, [user, newMessageFlag]);
 
   const handleLogout = async () => {
     if (user && user.id) {
@@ -216,6 +221,7 @@ const Home = ({ user, logout }) => {
           conversations={conversations}
           user={user}
           postMessage={postMessage}
+          setNewMessageFlag={setNewMessageFlag}
         />
       </Grid>
     </>

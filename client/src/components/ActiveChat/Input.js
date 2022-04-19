@@ -15,7 +15,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const Input = ({ otherUser, conversationId, user, postMessage }) => {
+const Input = ({ otherUser, conversationId, user, postMessage, setNewMessageFlag }) => {
   const classes = useStyles();
   const [text, setText] = useState('');
 
@@ -36,6 +36,8 @@ const Input = ({ otherUser, conversationId, user, postMessage }) => {
     };
     await postMessage(reqBody);
     setText('');
+    // Notify React app that a message has been posted and the app must re-render.
+    setNewMessageFlag(true);
   };
 
   return (
