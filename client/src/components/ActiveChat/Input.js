@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FormControl, FilledInput } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+import SelectInput from '@material-ui/core/Select/SelectInput';
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -15,7 +16,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const Input = ({ otherUser, conversationId, user, postMessage }) => {
+const Input = ({ otherUser, conversationId, user, postMessage, setNewMessageFlag }) => {
   const classes = useStyles();
   const [text, setText] = useState('');
 
@@ -36,6 +37,7 @@ const Input = ({ otherUser, conversationId, user, postMessage }) => {
     };
     await postMessage(reqBody);
     setText('');
+    setNewMessageFlag(true);
   };
 
   return (

@@ -21,6 +21,7 @@ const Home = ({ user, logout }) => {
 
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
+  const [newMessageFlag, setNewMessageFlag] = useState(false);
 
   const classes = useStyles();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -81,7 +82,7 @@ const Home = ({ user, logout }) => {
   const addNewConvo = useCallback(
     (recipientId, message) => {
       conversations.forEach((convo) => {
-        if (convo.otherUser.id === recipientId) {
+        if ((message) && (convo.otherUser.id === recipientId)) {
           convo.messages.push(message);
           convo.latestMessageText = message.text;
           convo.id = message.conversationId;
@@ -96,7 +97,7 @@ const Home = ({ user, logout }) => {
     (data) => {
       // if sender isn't null, that means the message needs to be put in a brand new convo
       const { message, sender = null } = data;
-      if (sender !== null) {
+      if ((message) && (sender !== null)) {
         const newConvo = {
           id: message.conversationId,
           otherUser: sender,
@@ -107,7 +108,7 @@ const Home = ({ user, logout }) => {
       }
 
       conversations.forEach((convo) => {
-        if (convo.id === message.conversationId) {
+        if ((message) && (convo.id === message.conversationId)) {
           convo.messages.push(message);
           convo.latestMessageText = message.text;
         }
@@ -184,6 +185,10 @@ const Home = ({ user, logout }) => {
       try {
         const { data } = await axios.get('/api/conversations');
         setConversations(data);
+        //If this useEffect triggered due to newMessageFlag, reset it to false.
+        if (newMessageFlag) {
+          setNewMessageFlag(false);
+        }
       } catch (error) {
         console.error(error);
       }
@@ -191,7 +196,7 @@ const Home = ({ user, logout }) => {
     if (!user.isFetching) {
       fetchConversations();
     }
-  }, [user]);
+  }, [user, newMessageFlag]);
 
   const handleLogout = async () => {
     if (user && user.id) {
@@ -216,6 +221,7 @@ const Home = ({ user, logout }) => {
           conversations={conversations}
           user={user}
           postMessage={postMessage}
+          setNewMessageFlag={setNewMessageFlag}
         />
       </Grid>
     </>
