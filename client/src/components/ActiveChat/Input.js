@@ -35,7 +35,6 @@ const Input = ({ otherUser, conversationId, user, postMessage, setNewMessageFlag
       conversationId,
       sender: conversationId ? null : user,
     };
-
     await postMessage(reqBody);
     setText('');
     setNewMessageFlag(true);
