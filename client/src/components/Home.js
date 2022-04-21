@@ -62,16 +62,19 @@ const Home = ({ user, logout }) => {
     });
   };
 
-  const postMessage = (body) => {
+  const postMessage = async (body) => {
     try {
-      const data = saveMessage(body);
-
+      //Bug fix: saveMessage returns a promise, so data must await its response. 
+      //Otherwise data will be undefined. 
+      const data = await saveMessage(body);
+      //Check if body.conversationId is null.
       if (!body.conversationId) {
         addNewConvo(body.recipientId, data.message);
       } else {
         addMessageToConversation(data);
       }
-
+      //Force a render by triggering the fetch useEffect.
+      //setNewMessageFlag(true);
       sendMessage(data, body);
     } catch (error) {
       console.error(error);
@@ -80,23 +83,27 @@ const Home = ({ user, logout }) => {
 
   const addNewConvo = useCallback(
     (recipientId, message) => {
-      conversations.forEach((convo) => {
+      //Note: I use conversations.slice() because otherwise Javascript shallow copies conversations.
+      const updatedConvo = conversations.slice();
+      updatedConvo.forEach((convo) => {
         if (convo.otherUser.id === recipientId) {
           convo.messages.push(message);
           convo.latestMessageText = message.text;
           convo.id = message.conversationId;
         }
       });
-      setConversations(conversations);
+      //Bug fix, setConversations(conversations) doesn't do anything so I passed it a copy of conversations instead. 
+      setConversations(updatedConvo);
     },
     [setConversations, conversations]
   );
 
   const addMessageToConversation = useCallback(
     (data) => {
-      // if sender isn't null, that means the message needs to be put in a brand new convo
-      const { message, sender = null } = data;
-      if (sender !== null) {
+      const message = data.message;
+      const sender = data.sender;
+      const updatedConvo = conversations.slice();
+      if ((sender !== null)) {
         const newConvo = {
           id: message.conversationId,
           otherUser: sender,
@@ -105,14 +112,13 @@ const Home = ({ user, logout }) => {
         newConvo.latestMessageText = message.text;
         setConversations((prev) => [newConvo, ...prev]);
       }
-
-      conversations.forEach((convo) => {
+      updatedConvo.forEach((convo) => {
         if (convo.id === message.conversationId) {
           convo.messages.push(message);
           convo.latestMessageText = message.text;
         }
       });
-      setConversations(conversations);
+      setConversations(updatedConvo);
     },
     [setConversations, conversations]
   );
