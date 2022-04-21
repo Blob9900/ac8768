@@ -23,8 +23,7 @@ const ActiveChat = ({
   user,
   conversations,
   activeConversation,
-  postMessage,
-  setNewMessageFlag
+  postMessage
 }) => {
   const classes = useStyles();
 
@@ -59,7 +58,6 @@ const ActiveChat = ({
                   conversationId={conversation.id || null}
                   user={user}
                   postMessage={postMessage}
-                  setNewMessageFlag={setNewMessageFlag}
                 />
               </>
             )}

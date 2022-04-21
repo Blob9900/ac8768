@@ -21,7 +21,6 @@ const Home = ({ user, logout }) => {
 
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
-  const [newMessageFlag, setNewMessageFlag] = useState(false);
 
   const classes = useStyles();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -63,10 +62,10 @@ const Home = ({ user, logout }) => {
     });
   };
 
-  const postMessage = (body) => {
+  const postMessage = async (body) => {
     try {
-      const data = saveMessage(body);
-
+      const data = await saveMessage(body);
+      //Check if body.conversationId is null.
       if (!body.conversationId) {
         addNewConvo(body.recipientId, data.message);
       } else {
@@ -81,23 +80,27 @@ const Home = ({ user, logout }) => {
 
   const addNewConvo = useCallback(
     (recipientId, message) => {
-      conversations.forEach((convo) => {
+      //Note: I use conversations.slice() because otherwise Javascript shallow copies conversations.
+      const updatedConvo = conversations.slice();
+      updatedConvo.forEach((convo) => {
         if ((message) && (convo.otherUser.id === recipientId)) {
           convo.messages.push(message);
           convo.latestMessageText = message.text;
           convo.id = message.conversationId;
         }
       });
-      setConversations(conversations);
+      setConversations(updatedConvo);
     },
     [setConversations, conversations]
   );
 
   const addMessageToConversation = useCallback(
     (data) => {
+      const message = data.message;
+      const sender = data.sender;
+      const updatedConvo = conversations.slice();
       // if sender isn't null, that means the message needs to be put in a brand new convo
-      const { message, sender = null } = data;
-      if ((message) && (sender !== null)) {
+      if (sender !== null) {
         const newConvo = {
           id: message.conversationId,
           otherUser: sender,
@@ -107,13 +110,13 @@ const Home = ({ user, logout }) => {
         setConversations((prev) => [newConvo, ...prev]);
       }
 
-      conversations.forEach((convo) => {
+      updatedConvo.forEach((convo) => {
         if ((message) && (convo.id === message.conversationId)) {
           convo.messages.push(message);
           convo.latestMessageText = message.text;
         }
       });
-      setConversations(conversations);
+      setConversations(updatedConvo);
     },
     [setConversations, conversations]
   );
@@ -185,10 +188,6 @@ const Home = ({ user, logout }) => {
       try {
         const { data } = await axios.get('/api/conversations');
         setConversations(data);
-        //If this useEffect triggered due to newMessageFlag, reset it to false.
-        if (newMessageFlag) {
-          setNewMessageFlag(false);
-        }
       } catch (error) {
         console.error(error);
       }
@@ -196,7 +195,7 @@ const Home = ({ user, logout }) => {
     if (!user.isFetching) {
       fetchConversations();
     }
-  }, [user, newMessageFlag]);
+  }, [user]);
 
   const handleLogout = async () => {
     if (user && user.id) {
@@ -221,7 +220,6 @@ const Home = ({ user, logout }) => {
           conversations={conversations}
           user={user}
           postMessage={postMessage}
-          setNewMessageFlag={setNewMessageFlag}
         />
       </Grid>
     </>
