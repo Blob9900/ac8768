@@ -21,6 +21,7 @@ const Home = ({ user, logout }) => {
 
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
+  const [unreadMessages, setUnreadMessages] = useState([]);
 
   const classes = useStyles();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -45,6 +46,40 @@ const Home = ({ user, logout }) => {
     setConversations(newState);
   };
 
+  const buildUnreadTable = (fetchedData) => {
+    //Check that fetchedData isn't null.
+    if (fetchedData) {
+      let unreadTable = [];
+
+      for (let i = 0; i < fetchedData.length; i++) {
+        let unreadCount = 0;
+        let unreadIds = [];
+
+        //Iterate through messages, count unread messages, and extract message IDs.
+        for (let j = 0; j < fetchedData[i].messages.length; j++) {
+          if (fetchedData[i].messages[j].readStatus === false) {
+            unreadIds.push(fetchedData[i].messages[j].id);
+            unreadCount++;
+          }
+        };
+
+        //Populate table entry.
+        let tableEntry = {
+          otherUserName: fetchedData[i].otherUser.username,
+          otherUserId: fetchedData[i].otherUser.id,
+          conversationId: fetchedData[i].id,
+          unreadCount: unreadCount,
+          unreadIds: unreadIds
+        };
+
+        //Push table entry.
+        unreadTable.push(tableEntry);
+      };
+      console.log("This is the new unreadTable", unreadTable);
+      return unreadTable;
+    }
+  }
+
   const clearSearchedUsers = () => {
     setConversations((prev) => prev.filter((convo) => convo.id));
   };
@@ -64,8 +99,6 @@ const Home = ({ user, logout }) => {
 
   const postMessage = async (body) => {
     try {
-      //Bug fix: saveMessage returns a promise, so data must await its response. 
-      //Otherwise data will be undefined. 
       const data = await saveMessage(body);
       //Check if body.conversationId is null.
       if (!body.conversationId) {
@@ -73,8 +106,6 @@ const Home = ({ user, logout }) => {
       } else {
         addMessageToConversation(data);
       }
-      //Force a render by triggering the fetch useEffect.
-      //setNewMessageFlag(true);
       sendMessage(data, body);
     } catch (error) {
       console.error(error);
@@ -92,7 +123,6 @@ const Home = ({ user, logout }) => {
           convo.id = message.conversationId;
         }
       });
-      //Bug fix, setConversations(conversations) doesn't do anything so I passed it a copy of conversations instead. 
       setConversations(updatedConvo);
     },
     [setConversations, conversations]
@@ -123,7 +153,31 @@ const Home = ({ user, logout }) => {
     [setConversations, conversations]
   );
 
+  const clearUnreadMessages = async (username) => {
+    console.log("There are unread messages. Now clearing them.");
+
+    //Check that there are unread messages.
+    if (unreadMessages.length !== 0) {
+      console.log("These are the unread messages:", unreadMessages);
+      //Search unreadMessageTable for the user being set to active.
+      const targetIndex = unreadMessages.findIndex(entry => entry.otherUserName === username);
+      //findIndex returns -1 if nothing was found.
+      if (targetIndex !== -1) {
+        //Update the database, then the state.
+        const reqBody = {
+          messageIds: unreadMessages[targetIndex].unreadIds,
+        };
+        console.log("This is the request body", reqBody);
+        //const { response } = await axios.post('/api/messages/clearUnread', reqBody);
+        //console.log("This was the response.", response);
+        unreadMessages[targetIndex].unreadCount = 0;
+        //return response;
+      }
+    }
+  }
+
   const setActiveChat = (username) => {
+    clearUnreadMessages(username);
     setActiveConversation(username);
   };
 
@@ -158,6 +212,14 @@ const Home = ({ user, logout }) => {
   // Lifecycle
 
   useEffect(() => {
+    console.log("Rendering");
+  })
+
+  useEffect(() => {
+    console.log("Unread messages changed");
+  }, [unreadMessages])
+
+  useEffect(() => {
     // Socket init
     socket.on('add-online-user', addOnlineUser);
     socket.on('remove-offline-user', removeOfflineUser);
@@ -190,6 +252,9 @@ const Home = ({ user, logout }) => {
       try {
         const { data } = await axios.get('/api/conversations');
         setConversations(data);
+        console.log("Fetched data: ", data);
+        const unreadTable = buildUnreadTable(data);
+        setUnreadMessages(unreadTable);
       } catch (error) {
         console.error(error);
       }
@@ -213,6 +278,7 @@ const Home = ({ user, logout }) => {
         <SidebarContainer
           conversations={conversations}
           user={user}
+          unreadMessages={unreadMessages}
           clearSearchedUsers={clearSearchedUsers}
           addSearchedUsers={addSearchedUsers}
           setActiveChat={setActiveChat}
