@@ -21,6 +21,7 @@ router.post("/clearUnread", async (req, res, next) => {
         }
       }
     );
+    return res.sendStatus(200);
   } catch (error) {
     next(error);
   }
