@@ -54,7 +54,6 @@ const Home = ({ user, logout }) => {
       for (let i = 0; i < fetchedData.length; i++) {
         let unreadCount = 0;
         let unreadIds = [];
-
         //Iterate through messages, count unread messages, and extract message IDs.
         for (let j = 0; j < fetchedData[i].messages.length; j++) {
           if (fetchedData[i].messages[j].readStatus === false) {
@@ -62,7 +61,6 @@ const Home = ({ user, logout }) => {
             unreadCount++;
           }
         };
-
         //Populate table entry.
         let tableEntry = {
           otherUserName: fetchedData[i].otherUser.username,
@@ -71,11 +69,9 @@ const Home = ({ user, logout }) => {
           unreadCount: unreadCount,
           unreadIds: unreadIds
         };
-
         //Push table entry.
         unreadTable.push(tableEntry);
       };
-      console.log("This is the new unreadTable", unreadTable);
       return unreadTable;
     }
   }
@@ -144,20 +140,16 @@ const Home = ({ user, logout }) => {
       }
       updatedConvo.forEach((convo) => {
         if (convo.id === message.conversationId) {
-          console.log("This is the new message", message);
           convo.messages.push(message);
           convo.latestMessageText = message.text;
         }
       });
-      console.log("Updated convo, check latest message:", updatedConvo)
       setConversations(updatedConvo);
     },
     [setConversations, conversations]
   );
 
   const clearUnreadMessages = async (username) => {
-    console.log("There are unread messages. Now clearing them.");
-
     //Check that there are unread messages.
     if (unreadMessages.length !== 0) {
       //Search unreadMessageTable for the user being set to active.
@@ -169,7 +161,6 @@ const Home = ({ user, logout }) => {
           messageIds: unreadMessages[targetIndex].unreadIds,
         };
         let copyUnreadMessages = unreadMessages.slice();
-        //console.log("Resetting this convo", copyUnreadMessages[targetIndex]);
         copyUnreadMessages[targetIndex].unreadCount = 0;
         setUnreadMessages(copyUnreadMessages);
 
@@ -180,7 +171,6 @@ const Home = ({ user, logout }) => {
   }
 
   const setActiveChat = (username) => {
-    console.log("Setting active chat to ", username);
     clearUnreadMessages(username);
     setActiveConversation(username);
   };
@@ -215,13 +205,9 @@ const Home = ({ user, logout }) => {
 
   // Lifecycle
 
-  useEffect(() => {
-    console.log("Rendering");
-  })
-
-  useEffect(() => {
-    console.log("Unread messages changed");
-  }, [unreadMessages])
+  // useEffect(() => {
+  //   console.log("Rendering");
+  // })
 
   useEffect(() => {
     // Socket init
@@ -256,7 +242,6 @@ const Home = ({ user, logout }) => {
       try {
         const { data } = await axios.get('/api/conversations');
         setConversations(data);
-        console.log("Fetched data: ", data);
         const unreadTable = buildUnreadTable(data);
         setUnreadMessages(unreadTable);
       } catch (error) {
