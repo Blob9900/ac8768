@@ -160,7 +160,6 @@ const Home = ({ user, logout }) => {
 
     //Check that there are unread messages.
     if (unreadMessages.length !== 0) {
-      console.log("These are the unread messages:", unreadMessages);
       //Search unreadMessageTable for the user being set to active.
       const targetIndex = unreadMessages.findIndex(entry => entry.otherUserName === username);
       //findIndex returns -1 if nothing was found.
@@ -169,16 +168,19 @@ const Home = ({ user, logout }) => {
         const reqBody = {
           messageIds: unreadMessages[targetIndex].unreadIds,
         };
-        console.log("This is the request body", reqBody);
-        //const { response } = await axios.post('/api/messages/clearUnread', reqBody);
-        //console.log("This was the response.", response);
-        unreadMessages[targetIndex].unreadCount = 0;
-        //return response;
+        let copyUnreadMessages = unreadMessages.slice();
+        //console.log("Resetting this convo", copyUnreadMessages[targetIndex]);
+        copyUnreadMessages[targetIndex].unreadCount = 0;
+        setUnreadMessages(copyUnreadMessages);
+
+        const response = await axios.post('/api/messages/clearUnread', reqBody);
+        return response;
       }
     }
   }
 
   const setActiveChat = (username) => {
+    console.log("Setting active chat to ", username);
     clearUnreadMessages(username);
     setActiveConversation(username);
   };

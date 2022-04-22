@@ -24,19 +24,10 @@ const useStyles = makeStyles((theme) => ({
     color: "#9CADC8",
     letterSpacing: -0.17,
   },
-}));
-
-const ChatContent = ({ conversation, unreadMessages }) => {
-  const classes = useStyles();
-
-  const { otherUser } = conversation;
-  const latestMessageText = conversation.id && conversation.latestMessageText;
-
-  //I'm using inline styles to preserve the directory structure.
-  const invisibleBubble = {
+  invisibleBubble: {
     visibility: 'hidden'
-  };
-  const visibleBubble = {
+  },
+  visibleBubble: {
     fontSize: 12,
     color: 'white',
     alignSelf: 'center',
@@ -48,14 +39,14 @@ const ChatContent = ({ conversation, unreadMessages }) => {
     padding: '1px 6px',
     marginRight: '1em',
     visibility: 'visible'
-  };
-  const isRegular = {
-    fontWeight: 'normal'
   }
-  const isBold = {
-    color: 'black',
-    fontWeight: 'bold'
-  }
+}));
+
+const ChatContent = ({ conversation, unreadMessages }) => {
+  const classes = useStyles();
+
+  const { otherUser } = conversation;
+  const latestMessageText = conversation.id && conversation.latestMessageText;
 
   return (
     <Box className={classes.root}>
@@ -67,7 +58,7 @@ const ChatContent = ({ conversation, unreadMessages }) => {
           {latestMessageText}
         </Typography>
       </Box>
-      <div style={unreadMessages ? visibleBubble : invisibleBubble}>{unreadMessages}</div>
+      <div className={unreadMessages ? classes.visibleBubble : classes.invisibleBubble}>{unreadMessages}</div>
     </Box>
   );
 };

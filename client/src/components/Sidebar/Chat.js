@@ -37,7 +37,8 @@ const Chat = ({ conversation, unreadMessages, setActiveChat }) => {
         unreadCount = extractedEntry[0].unreadCount;
       }
     }
-
+    console.log(conversation);
+    console.log(`Entered count function for ${conversation.otherUser.username} , this is the result: ${unreadCount}`);
     return unreadCount;
   }
 
