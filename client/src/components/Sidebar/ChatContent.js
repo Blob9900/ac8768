@@ -13,6 +13,12 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: "bold",
     letterSpacing: -0.2,
   },
+  boldPreviewText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: "black",
+    letterSpacing: -0.17,
+  },
   previewText: {
     fontSize: 12,
     color: "#9CADC8",
@@ -40,7 +46,8 @@ const ChatContent = ({ conversation, unreadMessages }) => {
     minWidth: '15px',
     minHeight: '15px',
     padding: '1px 6px',
-    marginRight: '1em'
+    marginRight: '1em',
+    visibility: 'visible'
   };
   const isRegular = {
     fontWeight: 'normal'
@@ -56,7 +63,7 @@ const ChatContent = ({ conversation, unreadMessages }) => {
         <Typography className={classes.username}>
           {otherUser.username}
         </Typography>
-        <Typography className={classes.previewText} style={unreadMessages ? isBold : isRegular}>
+        <Typography className={unreadMessages ? classes.boldPreviewText : classes.previewText} >
           {latestMessageText}
         </Typography>
       </Box>

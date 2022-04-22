@@ -144,10 +144,12 @@ const Home = ({ user, logout }) => {
       }
       updatedConvo.forEach((convo) => {
         if (convo.id === message.conversationId) {
+          console.log("This is the new message", message);
           convo.messages.push(message);
           convo.latestMessageText = message.text;
         }
       });
+      console.log("Updated convo, check latest message:", updatedConvo)
       setConversations(updatedConvo);
     },
     [setConversations, conversations]
