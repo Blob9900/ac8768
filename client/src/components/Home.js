@@ -21,9 +21,40 @@ const Home = ({ user, logout }) => {
 
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
+  const [unreadMessages, setUnreadMessages] = useState([]);
 
   const classes = useStyles();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const buildUnreadTable = (fetchedData) => {
+    //Check that fetchedData isn't null.
+    if (fetchedData) {
+      let unreadTable = [];
+
+      for (let i = 0; i < fetchedData.length; i++) {
+        let unreadCount = 0;
+        let unreadIds = [];
+        //Iterate through messages, count unread messages, and extract message IDs.
+        for (let j = 0; j < fetchedData[i].messages.length; j++) {
+          if (fetchedData[i].messages[j].readStatus === false) {
+            unreadIds.push(fetchedData[i].messages[j].id);
+            unreadCount++;
+          }
+        };
+        //Populate table entry.
+        let tableEntry = {
+          otherUserName: fetchedData[i].otherUser.username,
+          otherUserId: fetchedData[i].otherUser.id,
+          conversationId: fetchedData[i].id,
+          unreadCount: unreadCount,
+          unreadIds: unreadIds
+        };
+        //Push table entry.
+        unreadTable.push(tableEntry);
+      };
+      return unreadTable;
+    }
+  }
 
   const addSearchedUsers = (users) => {
     const currentUsers = {};
@@ -62,9 +93,9 @@ const Home = ({ user, logout }) => {
     });
   };
 
-  const postMessage = (body) => {
+  const postMessage = async (body) => {
     try {
-      const data = saveMessage(body);
+      const data = await saveMessage(body);
 
       if (!body.conversationId) {
         addNewConvo(body.recipientId, data.message);
@@ -80,14 +111,15 @@ const Home = ({ user, logout }) => {
 
   const addNewConvo = useCallback(
     (recipientId, message) => {
-      conversations.forEach((convo) => {
+      const updatedConvo = structuredClone(conversations);
+      updatedConvo.forEach((convo) => {
         if (convo.otherUser.id === recipientId) {
           convo.messages.push(message);
           convo.latestMessageText = message.text;
           convo.id = message.conversationId;
         }
       });
-      setConversations(conversations);
+      setConversations(updatedConvo);
     },
     [setConversations, conversations]
   );
@@ -96,6 +128,7 @@ const Home = ({ user, logout }) => {
     (data) => {
       // if sender isn't null, that means the message needs to be put in a brand new convo
       const { message, sender = null } = data;
+      const updatedConvo = structuredClone(conversations);
       if (sender !== null) {
         const newConvo = {
           id: message.conversationId,
@@ -106,18 +139,40 @@ const Home = ({ user, logout }) => {
         setConversations((prev) => [newConvo, ...prev]);
       }
 
-      conversations.forEach((convo) => {
+      updatedConvo.forEach((convo) => {
         if (convo.id === message.conversationId) {
           convo.messages.push(message);
           convo.latestMessageText = message.text;
         }
       });
-      setConversations(conversations);
+      setConversations(updatedConvo);
     },
     [setConversations, conversations]
   );
 
+  const clearUnreadMessages = async (username) => {
+    //Check that there are unread messages.
+    if (unreadMessages.length !== 0) {
+      //Search unreadMessageTable for the user being set to active.
+      const targetIndex = unreadMessages.findIndex(entry => entry.otherUserName === username);
+      //findIndex returns -1 if nothing was found.
+      if (targetIndex !== -1) {
+        //Update the database, then the state.
+        const reqBody = {
+          messageIds: unreadMessages[targetIndex].unreadIds,
+        };
+        let copyUnreadMessages = unreadMessages.slice();
+        copyUnreadMessages[targetIndex].unreadCount = 0;
+        setUnreadMessages(copyUnreadMessages);
+
+        const response = await axios.post('/api/messages/clearUnread', reqBody);
+        return response;
+      }
+    }
+  }
+
   const setActiveChat = (username) => {
+    clearUnreadMessages(username);
     setActiveConversation(username);
   };
 
@@ -184,6 +239,8 @@ const Home = ({ user, logout }) => {
       try {
         const { data } = await axios.get('/api/conversations');
         setConversations(data);
+        const unreadTable = buildUnreadTable(data);
+        setUnreadMessages(unreadTable);
       } catch (error) {
         console.error(error);
       }
@@ -207,6 +264,7 @@ const Home = ({ user, logout }) => {
         <SidebarContainer
           conversations={conversations}
           user={user}
+          unreadMessages={unreadMessages}
           clearSearchedUsers={clearSearchedUsers}
           addSearchedUsers={addSearchedUsers}
           setActiveChat={setActiveChat}

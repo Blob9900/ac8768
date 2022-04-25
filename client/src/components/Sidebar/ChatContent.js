@@ -13,14 +13,36 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: "bold",
     letterSpacing: -0.2,
   },
+  boldPreviewText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: "black",
+    letterSpacing: -0.17,
+  },
   previewText: {
     fontSize: 12,
     color: "#9CADC8",
     letterSpacing: -0.17,
   },
+  invisibleBubble: {
+    visibility: 'hidden'
+  },
+  visibleBubble: {
+    fontSize: 12,
+    color: 'white',
+    alignSelf: 'center',
+    textAlign: 'center',
+    borderRadius: '999px',
+    backgroundColor: '#3A8DFF',
+    minWidth: '15px',
+    minHeight: '15px',
+    padding: '1px 6px',
+    marginRight: '1em',
+    visibility: 'visible'
+  }
 }));
 
-const ChatContent = ({ conversation }) => {
+const ChatContent = ({ conversation, unreadMessages }) => {
   const classes = useStyles();
 
   const { otherUser } = conversation;
@@ -32,10 +54,11 @@ const ChatContent = ({ conversation }) => {
         <Typography className={classes.username}>
           {otherUser.username}
         </Typography>
-        <Typography className={classes.previewText}>
+        <Typography className={unreadMessages ? classes.boldPreviewText : classes.previewText} >
           {latestMessageText}
         </Typography>
       </Box>
+      <div className={unreadMessages ? classes.visibleBubble : classes.invisibleBubble}>{unreadMessages}</div>
     </Box>
   );
 };
