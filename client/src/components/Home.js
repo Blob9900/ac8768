@@ -14,6 +14,8 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+//minor change to test commit
+
 const Home = ({ user, logout }) => {
   const history = useHistory();
 
