@@ -17,28 +17,13 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Chat = ({ conversation, unreadMessages, setActiveChat }) => {
+const Chat = ({ conversation, setActiveChat }) => {
   const classes = useStyles();
   const { otherUser } = conversation;
 
   const handleClick = async (conversation) => {
     await setActiveChat(conversation.otherUser.username);
   };
-
-  const countUnreadMessages = (conversation, unreadMessageTable) => {
-    let unreadCount = 0;
-
-    //Check that there are unread messages.
-    if (unreadMessageTable.length !== 0) {
-      //Search unreadMessageTable for the current conversation.
-      const extractedEntry = unreadMessageTable.filter(entry => entry.conversationId === conversation.id);
-      //Check that an entry was extracted at all.
-      if (extractedEntry.length > 0) {
-        unreadCount = extractedEntry[0].unreadCount;
-      }
-    }
-    return unreadCount;
-  }
 
   return (
     <Box onClick={() => handleClick(conversation)} className={classes.root}>
@@ -48,7 +33,7 @@ const Chat = ({ conversation, unreadMessages, setActiveChat }) => {
         online={otherUser.online}
         sidebar={true}
       />
-      <ChatContent conversation={conversation} unreadMessages={countUnreadMessages(conversation, unreadMessages)} />
+      <ChatContent conversation={conversation} />
     </Box>
   );
 };

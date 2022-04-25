@@ -14,8 +14,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-//minor change to test commit
-
 const Home = ({ user, logout }) => {
   const history = useHistory();
 
@@ -23,38 +21,25 @@ const Home = ({ user, logout }) => {
 
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
-  const [unreadMessages, setUnreadMessages] = useState([]);
 
   const classes = useStyles();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const buildUnreadTable = (fetchedData) => {
-    //Check that fetchedData isn't null.
-    if (fetchedData) {
-      let unreadTable = [];
-
-      for (let i = 0; i < fetchedData.length; i++) {
-        let unreadCount = 0;
-        let unreadIds = [];
-        //Iterate through messages, count unread messages, and extract message IDs.
-        for (let j = 0; j < fetchedData[i].messages.length; j++) {
-          if (fetchedData[i].messages[j].readStatus === false) {
-            unreadIds.push(fetchedData[i].messages[j].id);
-            unreadCount++;
-          }
-        };
-        //Populate table entry.
-        let tableEntry = {
-          otherUserName: fetchedData[i].otherUser.username,
-          otherUserId: fetchedData[i].otherUser.id,
-          conversationId: fetchedData[i].id,
-          unreadCount: unreadCount,
-          unreadIds: unreadIds
-        };
-        //Push table entry.
-        unreadTable.push(tableEntry);
+  const clearUnreadMessages = async (username) => {
+    const convoIndex = conversations.findIndex(convo => convo.otherUser.username === username);
+    if (convoIndex === -1) {
+      return;
+    } else if (conversations[convoIndex].unreadMessages > 0) {     
+      const reqBody = {
+        messageIds: conversations[convoIndex].unreadIds,
       };
-      return unreadTable;
+      const response = await axios.patch('/api/messages/clear-unread', reqBody);
+      
+      const updatedConvo = JSON.parse(JSON.stringify(conversations));     
+      updatedConvo[convoIndex].unreadMessages = 0;
+      setConversations(updatedConvo);
+
+      return response;
     }
   }
 
@@ -104,7 +89,6 @@ const Home = ({ user, logout }) => {
       } else {
         addMessageToConversation(data);
       }
-
       sendMessage(data, body);
     } catch (error) {
       console.error(error);
@@ -119,6 +103,8 @@ const Home = ({ user, logout }) => {
           convo.messages.push(message);
           convo.latestMessageText = message.text;
           convo.id = message.conversationId;
+          convo.unreadMessages = 1;
+          convo.unreadIds = [message.id];
         }
       });
       setConversations(updatedConvo);
@@ -136,6 +122,7 @@ const Home = ({ user, logout }) => {
           id: message.conversationId,
           otherUser: sender,
           messages: [message],
+          unreadMessages: 1,
         };
         newConvo.latestMessageText = message.text;
         setConversations((prev) => [newConvo, ...prev]);
@@ -145,6 +132,7 @@ const Home = ({ user, logout }) => {
         if (convo.id === message.conversationId) {
           convo.messages.push(message);
           convo.latestMessageText = message.text;
+          convo.unreadMessages++;
         }
       });
       setConversations(updatedConvo);
@@ -152,30 +140,9 @@ const Home = ({ user, logout }) => {
     [setConversations, conversations]
   );
 
-  const clearUnreadMessages = async (username) => {
-    //Check that there are unread messages.
-    if (unreadMessages.length !== 0) {
-      //Search unreadMessageTable for the user being set to active.
-      const targetIndex = unreadMessages.findIndex(entry => entry.otherUserName === username);
-      //findIndex returns -1 if nothing was found.
-      if (targetIndex !== -1) {
-        //Update the database, then the state.
-        const reqBody = {
-          messageIds: unreadMessages[targetIndex].unreadIds,
-        };
-        let copyUnreadMessages = unreadMessages.slice();
-        copyUnreadMessages[targetIndex].unreadCount = 0;
-        setUnreadMessages(copyUnreadMessages);
-
-        const response = await axios.post('/api/messages/clearUnread', reqBody);
-        return response;
-      }
-    }
-  }
-
   const setActiveChat = (username) => {
-    clearUnreadMessages(username);
     setActiveConversation(username);
+    clearUnreadMessages(username);
   };
 
   const addOnlineUser = useCallback((id) => {
@@ -241,8 +208,6 @@ const Home = ({ user, logout }) => {
       try {
         const { data } = await axios.get('/api/conversations');
         setConversations(data);
-        const unreadTable = buildUnreadTable(data);
-        setUnreadMessages(unreadTable);
       } catch (error) {
         console.error(error);
       }
@@ -266,7 +231,6 @@ const Home = ({ user, logout }) => {
         <SidebarContainer
           conversations={conversations}
           user={user}
-          unreadMessages={unreadMessages}
           clearSearchedUsers={clearSearchedUsers}
           addSearchedUsers={addSearchedUsers}
           setActiveChat={setActiveChat}

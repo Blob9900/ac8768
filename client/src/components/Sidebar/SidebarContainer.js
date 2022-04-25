@@ -5,7 +5,6 @@ import axios from 'axios';
 const SidebarContainer = ({
   conversations,
   user,
-  unreadMessages,
   clearSearchedUsers,
   addSearchedUsers,
   setActiveChat,
@@ -43,7 +42,6 @@ const SidebarContainer = ({
       searchTerm={searchTerm}
       conversations={conversations}
       user={user}
-      unreadMessages={unreadMessages}
       setActiveChat={setActiveChat}
     />
   );
