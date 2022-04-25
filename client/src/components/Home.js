@@ -97,7 +97,7 @@ const Home = ({ user, logout }) => {
 
   const addNewConvo = useCallback(
     (recipientId, message) => {
-      const updatedConvo = structuredClone(conversations);
+      const updatedConvo = JSON.parse(JSON.stringify(conversations));
       updatedConvo.forEach((convo) => {
         if (convo.otherUser.id === recipientId) {
           convo.messages.push(message);
@@ -116,7 +116,7 @@ const Home = ({ user, logout }) => {
     (data) => {
       // if sender isn't null, that means the message needs to be put in a brand new convo
       const { message, sender = null } = data;
-      const updatedConvo = structuredClone(conversations);
+      const updatedConvo = JSON.parse(JSON.stringify(conversations));
       if (sender !== null) {
         const newConvo = {
           id: message.conversationId,
