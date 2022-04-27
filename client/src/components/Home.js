@@ -31,14 +31,24 @@ const Home = ({ user, logout }) => {
       return;
     } else if (conversations[convoIndex].unreadMessages > 0) {     
       const reqBody = {
+        otherUserId: conversations[convoIndex].otherUser.id, 
         messageIds: conversations[convoIndex].unreadIds,
       };
       const response = await axios.patch('/api/messages/clear-unread', reqBody);
       
-      const updatedConvo = JSON.parse(JSON.stringify(conversations));     
-      updatedConvo[convoIndex].unreadMessages = 0;
-      setConversations(updatedConvo);
-
+      setConversations((prev) =>
+        prev.map((convo) => {
+          if (convo.otherUser.username === username) {
+            console.log("Found conversation of ", username)
+            const convoCopy = { ...convo, messages: [ ...convo.messages ] };
+            convoCopy.unreadMessages = 0;
+            console.log("Resulting copy:", convoCopy)
+            return convoCopy;
+          } else {
+            return convo;
+          }
+        })
+      );
       return response;
     }
   }
@@ -97,47 +107,52 @@ const Home = ({ user, logout }) => {
 
   const addNewConvo = useCallback(
     (recipientId, message) => {
-      const updatedConvo = JSON.parse(JSON.stringify(conversations));
-      updatedConvo.forEach((convo) => {
-        if (convo.otherUser.id === recipientId) {
-          convo.messages.push(message);
-          convo.latestMessageText = message.text;
-          convo.id = message.conversationId;
-          convo.unreadMessages = 1;
-          convo.unreadIds = [message.id];
-        }
-      });
-      setConversations(updatedConvo);
+      setConversations((prev) =>
+        prev.map((convo) => {
+          if ((message) && (convo.otherUser.id === recipientId)) {
+            const convoCopy = { ...convo };
+            convoCopy.messages.push(message);
+            convoCopy.latestMessageText = message.text;
+            convoCopy.id = message.conversationId;
+            return convoCopy;
+          } else {
+            return convo;
+          }
+        })
+      );
     },
-    [setConversations, conversations]
+    [setConversations]
   );
 
   const addMessageToConversation = useCallback(
     (data) => {
       // if sender isn't null, that means the message needs to be put in a brand new convo
       const { message, sender = null } = data;
-      const updatedConvo = JSON.parse(JSON.stringify(conversations));
+
       if (sender !== null) {
         const newConvo = {
           id: message.conversationId,
           otherUser: sender,
           messages: [message],
-          unreadMessages: 1,
         };
         newConvo.latestMessageText = message.text;
         setConversations((prev) => [newConvo, ...prev]);
       }
 
-      updatedConvo.forEach((convo) => {
-        if (convo.id === message.conversationId) {
-          convo.messages.push(message);
-          convo.latestMessageText = message.text;
-          convo.unreadMessages++;
-        }
-      });
-      setConversations(updatedConvo);
+      setConversations((prev) =>
+        prev.map((convo) => {
+          if (convo.id === message.conversationId) {
+            const convoCopy = { ...convo };
+            convo.messages.push(message);
+            convo.latestMessageText = message.text;
+            return convoCopy;
+          } else {
+            return convo;
+          }
+        })
+      );
     },
-    [setConversations, conversations]
+    [setConversations]
   );
 
   const setActiveChat = (username) => {

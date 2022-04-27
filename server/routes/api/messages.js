@@ -6,7 +6,10 @@ const onlineUsers = require("../../onlineUsers");
 // Expects a conversation ID and a sender ID.
 router.patch("/clear-unread", async (req, res, next) => {
   try {
-    if (!req.user) {
+    const userId = req.user.id;
+    const senderId = req.body.otherUserId; 
+
+    if (!userId && userId !== senderId) {
       return res.sendStatus(401);
     }
     const idRange = req.body.messageIds;
