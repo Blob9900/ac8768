@@ -83,8 +83,6 @@ router.get("/", async (req, res, next) => {
       convoJSON.unreadMessages = unreadCount;
       convoJSON.unreadIds = unreadIds;
       convoJSON.lastReadMessage = lastReadMessage;
-      convoJSON.latestMessageText = convoJSON.messages[(convoJSON.messages.length - 1)].text;
-      conversations[i] = convoJSON;
     }
 
     res.json(conversations);
