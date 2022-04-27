@@ -25,6 +25,34 @@ const Home = ({ user, logout }) => {
   const classes = useStyles();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  const clearUnreadMessages = async (username) => {
+    const convoIndex = conversations.findIndex(convo => convo.otherUser.username === username);
+    if (convoIndex === -1) {
+      return;
+    } else if (conversations[convoIndex].unreadMessages > 0) {     
+      const reqBody = {
+        otherUserId: conversations[convoIndex].otherUser.id, 
+        messageIds: conversations[convoIndex].unreadIds,
+      };
+      const response = await axios.patch('/api/messages/clear-unread', reqBody);
+      
+      setConversations((prev) =>
+        prev.map((convo) => {
+          if (convo.otherUser.username === username) {
+            console.log("Found conversation of ", username)
+            const convoCopy = { ...convo, messages: [ ...convo.messages ] };
+            convoCopy.unreadMessages = 0;
+            console.log("Resulting copy:", convoCopy)
+            return convoCopy;
+          } else {
+            return convo;
+          }
+        })
+      );
+      return response;
+    }
+  }
+
   const addSearchedUsers = (users) => {
     const currentUsers = {};
 
@@ -71,7 +99,6 @@ const Home = ({ user, logout }) => {
       } else {
         addMessageToConversation(data);
       }
-
       sendMessage(data, body);
     } catch (error) {
       console.error(error);
@@ -130,6 +157,7 @@ const Home = ({ user, logout }) => {
 
   const setActiveChat = (username) => {
     setActiveConversation(username);
+    clearUnreadMessages(username);
   };
 
   const addOnlineUser = useCallback((id) => {

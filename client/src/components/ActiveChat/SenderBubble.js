@@ -1,12 +1,18 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Box, Typography } from '@material-ui/core';
+import { Avatar, Box, Typography } from '@material-ui/core';
 
 const useStyles = makeStyles(() => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-end',
+  },
+  readAvatar: {
+    height: 20,
+    width: 20,
+    objectFit: 'contain',
+    alignItems: 'flex-end'
   },
   date: {
     fontSize: 11,
@@ -27,15 +33,23 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const SenderBubble = ({ time, text }) => {
+const SenderBubble = ({ time, message, lastReadMessage, otherUser }) => {
   const classes = useStyles();
 
   return (
     <Box className={classes.root}>
       <Typography className={classes.date}>{time}</Typography>
       <Box className={classes.bubble}>
-        <Typography className={classes.text}>{text}</Typography>
+        <Typography className={classes.text}>{message.text}</Typography>
       </Box>
+      { 
+        (message.id === lastReadMessage) && 
+        <Avatar
+          alt={otherUser.username}
+          src={otherUser.photoUrl}
+          className={classes.readAvatar}
+      /> 
+      }
     </Box>
   );
 };
