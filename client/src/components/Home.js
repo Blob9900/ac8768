@@ -14,8 +14,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-// I'm writing this comment just so git recognizes a change.
-
 const Home = ({ user, logout }) => {
   const history = useHistory();
 
