@@ -11,7 +11,7 @@ const Conversation = db.define("conversation", {
 });
 
 // You would never use the below function in the new group chat paradigm.
-// But you also don't need a findConversationByUser function anyways since you can search by ID.
+
 // find conversation given two user Ids
 
 Conversation.findConversation = async function (user1Id, user2Id) {
